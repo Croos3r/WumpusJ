@@ -8,7 +8,9 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -48,10 +50,9 @@ public class CommandHandler {
 
         Message eventMessage = event.getMessage();
 
-
         message = message.replace(this.prefix, "");
         String label = message.split(" ")[0];
-        List<String> args = Arrays.asList(message.split(" "));
+        List<String> args = new LinkedList<>(Arrays.asList(message.split(" ")));
         args.remove(label + "");
 
         if (commands != null) {
@@ -67,6 +68,8 @@ public class CommandHandler {
 
                     switch (result) {
 
+                        case PASSING:
+                            break;
                         case INSUFFICIENT_PERMISSIONS:
                             if (insufficientPermissions == null)
                                 eventMessage.getChannel().sendMessage(eventMessage.getAuthor().getAsMention() + ", vous n'avez pas les permissions requises ! ⚠️").queue();

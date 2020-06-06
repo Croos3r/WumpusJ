@@ -1,7 +1,6 @@
-package fr.crooser.wumpusj.reactions;
+package fr.crooser.wumpusj.reaction;
 
 import fr.crooser.wumpusj.Bot;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;

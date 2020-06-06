@@ -5,8 +5,8 @@ import fr.crooser.wumpusj.command.CommandListener;
 import fr.crooser.wumpusj.command.handler.CommandHandler;
 import fr.crooser.wumpusj.command.handler.CommandHandlerCommons;
 import fr.crooser.wumpusj.guild.join.GuildMemberJoin;
-import fr.crooser.wumpusj.reactions.ReactionListener;
-import fr.crooser.wumpusj.reactions.ReactionTrigger;
+import fr.crooser.wumpusj.reaction.ReactionListener;
+import fr.crooser.wumpusj.reaction.ReactionTrigger;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;

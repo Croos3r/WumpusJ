@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 public abstract class Command {
@@ -17,7 +18,7 @@ public abstract class Command {
 
         this.label = label;
         this.usage = usage;
-        this.aliases = Arrays.asList(aliases);
+        this.aliases = new LinkedList<>(Arrays.asList(aliases));
     }
 
     public String getLabel() {
@@ -39,6 +40,7 @@ public abstract class Command {
         INSUFFICIENT_PERMISSIONS,
         SYNTAX_ERROR,
         ON_ADMIN_ERROR,
-        ON_YOURSELF_ERROR
+        ON_YOURSELF_ERROR,
+        PASSING
     }
 }

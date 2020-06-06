@@ -1,4 +1,4 @@
-package fr.crooser.wumpusj.reactions;
+package fr.crooser.wumpusj.reaction;
 
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Member;
