@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,22 +27,23 @@ public class CommandHandler {
     private final Consumer<Message> onYourselfError;
     private final Consumer<Message> unknownCommand;
 
-    public CommandHandler(@NotNull Bot bot,
-
-                          @Nullable Consumer<Message> insufficientPermissions,
-                          @Nullable Consumer<Message> syntaxError,
-                          @Nullable Consumer<Message> onAdminError,
-                          @Nullable Consumer<Message> onYourselfError,
-                          @Nullable Consumer<Message> unknownCommand) {
+    public CommandHandler(@NotNull Bot bot, @Nullable CommandHandlerCommons handlerCommons) {
 
         this.prefix = bot.getPrefix();
         this.commands = bot.getCommands();
         this.bot = bot;
-        this.insufficientPermissions = insufficientPermissions;
-        this.syntaxError = syntaxError;
-        this.onAdminError = onAdminError;
-        this.onYourselfError = onYourselfError;
-        this.unknownCommand = unknownCommand;
+        if (handlerCommons == null) {
+
+            this.insufficientPermissions = this.syntaxError = this.onAdminError = this.onYourselfError = this.unknownCommand = null;
+        }
+        else {
+
+            this.insufficientPermissions = handlerCommons.getInsufficientPermissions();
+            this.syntaxError = handlerCommons.getSyntaxError();
+            this.onAdminError = handlerCommons.getOnAdminError();
+            this.onYourselfError = handlerCommons.getOnYourselfError();
+            this.unknownCommand = handlerCommons.getUnknownCommand();
+        }
     }
 
     public void handle(String message, GuildMessageReceivedEvent event) {

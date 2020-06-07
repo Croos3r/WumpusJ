@@ -2,10 +2,8 @@ package fr.crooser.wumpusj.command;
 
 import fr.crooser.wumpusj.Bot;
 import fr.crooser.wumpusj.command.handler.CommandHandler;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -28,11 +26,10 @@ public class CommandListener extends ListenerAdapter {
 
         final Member member = event.getMember();
         final Message message = event.getMessage();
-        final Guild guild = event.getGuild();
-        final TextChannel channel = event.getChannel();
 
         final String content = message.getContentRaw();
 
-        if (content.startsWith(bot.getPrefix())) this.commandHandler.handle(content, event);
+        if (content.startsWith(this.bot.getPrefix()) && member.getUser() != this.bot.getJda().getSelfUser() && !member.getUser().isBot())
+            this.commandHandler.handle(content, event);
     }
 }
