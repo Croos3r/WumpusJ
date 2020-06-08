@@ -11,17 +11,19 @@ import java.util.List;
 
 public class ReactionListener extends ListenerAdapter {
 
-    private final List<ReactionTrigger> triggers;
+    private final Bot bot;
 
     public ReactionListener(Bot bot) {
 
-        this.triggers = bot.getReactionTriggers();
+        this.bot = bot;
     }
 
     private Message message;
 
     @Override
     public void onGuildMessageReactionAdd(@Nonnull GuildMessageReactionAddEvent event) {
+
+        List<ReactionTrigger> triggers = this.bot.getReactionTriggers();
 
         TextChannel channel = event.getChannel();
         Member member = event.getMember();
@@ -35,7 +37,7 @@ public class ReactionListener extends ListenerAdapter {
 
                 triggers.forEach(trigger -> {
 
-                    if (channel == trigger.getChannel() && trigger.getEmotes().contains(emote)) trigger.trigger(member, message, emote);
+                    if (channel == trigger.getChannel() && trigger.getEmotes().contains(emote)) trigger.trigger(member, this.message, emote);
                 });
 
                 super.onGuildMessageReactionAdd(event);
@@ -45,6 +47,8 @@ public class ReactionListener extends ListenerAdapter {
 
     @Override
     public void onGuildMessageReactionRemove(@Nonnull GuildMessageReactionRemoveEvent event) {
+
+        List<ReactionTrigger> triggers = bot.getReactionTriggers();
 
         TextChannel channel = event.getChannel();
         Member member = event.getMember();

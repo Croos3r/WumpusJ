@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class CommandHandler {
@@ -19,7 +20,6 @@ public class CommandHandler {
     private final Bot bot;
 
     private final String prefix;
-    private final List<Command> commands;
 
 
     private final Consumer<Message> insufficientPermissions;
@@ -31,7 +31,6 @@ public class CommandHandler {
     public CommandHandler(@NotNull Bot bot, @Nullable CommandHandlerCommons handlerCommons) {
 
         this.prefix = bot.getPrefix();
-        this.commands = bot.getCommands();
         this.bot = bot;
         if (handlerCommons == null) {
 
@@ -48,10 +47,8 @@ public class CommandHandler {
         }
     }
 
-
-    private boolean found = false;
-
     public void handle(String message, GuildMessageReceivedEvent event) {
+
 
         Message eventMessage = event.getMessage();
 
@@ -62,9 +59,13 @@ public class CommandHandler {
 
         this.bot.debug("Processed message, returned label -> " + label + " and args -> " + args.toString());
 
-        if (this.commands != null) {
+        List<Command> commands = this.bot.getCommands();
 
-            this.commands.forEach(command -> {
+        if (commands != null) {
+
+            AtomicBoolean found = new AtomicBoolean(false);
+
+            commands.forEach(command -> {
 
                 List<String> aliases = command.getAliases();
                 aliases.add(command.getLabel());
@@ -73,7 +74,7 @@ public class CommandHandler {
 
                     this.bot.debug("Command found, waiting for result");
 
-                    this.found = true;
+                    found.getAndSet(false);
 
                     Result result = command.execute(eventMessage, label, args, event.getJDA());
 
@@ -110,7 +111,7 @@ public class CommandHandler {
                 }
             });
 
-            if (!found) {
+            if (!found.get()) {
 
                 this.bot.debug("Command not found, sending common");
                 if (this.unknownCommand != null) this.unknownCommand.accept(eventMessage);

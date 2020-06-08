@@ -28,8 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class Bot extends ListenerAdapter {
@@ -122,6 +121,32 @@ public class Bot extends ListenerAdapter {
     public String getPrefix() {
 
         return prefix;
+    }
+
+    public void addCommands(Command... commands) {
+
+        for (Command command : commands)
+            if (!this.commands.contains(command))
+                this.commands.add(command);
+    }
+
+    public void removeCommands(String... labels) {
+
+        List<String> commandLabels = new LinkedList<>(Arrays.asList(labels));
+        this.commands.removeIf(command -> commandLabels.contains(command.getLabel()));
+    }
+
+    public void addReactionsTriggers(ReactionTrigger... triggers) {
+
+        for (ReactionTrigger trigger : triggers)
+            if (!this.reactionTriggers.contains(trigger))
+                this.reactionTriggers.add(trigger);
+    }
+
+    public void removeReactionTriggers(String... ids) {
+
+        List<String> triggerIDs = new LinkedList<>(Arrays.asList(ids));
+        this.reactionTriggers.removeIf(trigger -> triggerIDs.contains(trigger.getId()));
     }
 
     public void debug(String s) {
