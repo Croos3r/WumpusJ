@@ -88,6 +88,12 @@ public class Bot extends ListenerAdapter {
         try {
 
             this.jda = jdaBuilder.build().awaitReady();
+            this.debug("Bot created:");
+            this.debug("name -> " + this.name);
+            this.debug("prefix -> " + this.prefix);
+            this.debug("commands -> " + this.commands.size());
+            this.debug("reaction triggers -> " + this.reactionTriggers.size());
+            this.debug("activity -> " + (activity != null ? activity.getName() : "false"));
         } catch (LoginException e) {
 
             logger.error("Bot's token is invalid.");
