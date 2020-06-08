@@ -2,6 +2,8 @@ package fr.crooser.wumpusj.command;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.Arrays;
@@ -33,7 +35,7 @@ public abstract class Command {
         return aliases;
     }
 
-    public abstract Result execute(Member member, String label, TextChannel channel, List<String> args, JDA jda);
+    public abstract Result execute(Message message, String label, List<String> args, JDA jda);
 
     public enum Result {
 

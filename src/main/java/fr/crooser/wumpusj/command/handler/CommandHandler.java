@@ -75,7 +75,7 @@ public class CommandHandler {
 
                     this.found = true;
 
-                    Result result = command.execute(event.getMember(), label, event.getChannel(), args, event.getJDA());
+                    Result result = command.execute(eventMessage, label, args, event.getJDA());
 
                     switch (result) {
 
