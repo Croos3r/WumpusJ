@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -35,6 +36,7 @@ public class CommandHandler {
         if (handlerCommons == null) {
 
             this.insufficientPermissions = this.syntaxError = this.onAdminError = this.onYourselfError = this.unknownCommand = null;
+            this.bot.debug("Defaulted commons");
         }
         else {
 
@@ -46,6 +48,9 @@ public class CommandHandler {
         }
     }
 
+
+    private boolean found = false;
+
     public void handle(String message, GuildMessageReceivedEvent event) {
 
         Message eventMessage = event.getMessage();
@@ -55,49 +60,62 @@ public class CommandHandler {
         List<String> args = new LinkedList<>(Arrays.asList(message.split(" ")));
         args.remove(label + "");
 
-        if (commands != null) {
+        this.bot.debug("Processed message, returned label -> " + label + " and args -> " + args.toString());
 
-            commands.forEach(command -> {
+        if (this.commands != null) {
+
+            this.commands.forEach(command -> {
 
                 List<String> aliases = command.getAliases();
                 aliases.add(command.getLabel());
 
                 if (aliases.contains(label)) {
 
+                    this.bot.debug("Command found, waiting for result");
+
+                    this.found = true;
+
                     Result result = command.execute(event.getMember(), label, event.getChannel(), args, event.getJDA());
 
                     switch (result) {
 
                         case PASSING:
+                            this.bot.debug("No commons error returned, passing");
                             break;
                         case INSUFFICIENT_PERMISSIONS:
-                            if (insufficientPermissions == null)
+                            this.bot.debug("Insufficient permission returned, sending common");
+                            if (this.insufficientPermissions == null)
                                 eventMessage.getChannel().sendMessage(eventMessage.getAuthor().getAsMention() + ", vous n'avez pas les permissions requises ! ⚠️").queue();
-                            else insufficientPermissions.accept(eventMessage);
+                            else this.insufficientPermissions.accept(eventMessage);
                             break;
                         case SYNTAX_ERROR:
-                            if (syntaxError == null)
+                            this.bot.debug("Syntax error returned, sending common");
+                            if (this.syntaxError == null)
                                 eventMessage.getChannel().sendMessage(eventMessage.getAuthor().getAsMention() + ", " + command.getUsage() + " ⚠").queue();
-                            else syntaxError.accept(eventMessage);
+                            else this.syntaxError.accept(eventMessage);
                             break;
                         case ON_ADMIN_ERROR:
-                            if (onAdminError == null)
+                            this.bot.debug("On admin error returned, sending common");
+                            if (this.onAdminError == null)
                                 eventMessage.getChannel().sendMessage(eventMessage.getAuthor().getAsMention() + ", vous ne pouvez pas effectuer cette commande sur un administrateur ! ⚠").queue();
-                            else onAdminError.accept(eventMessage);
+                            else this.onAdminError.accept(eventMessage);
                             break;
                         case ON_YOURSELF_ERROR:
-                            if (onYourselfError == null)
+                            this.bot.debug("On yourself error returned, sending common");
+                            if (this.onYourselfError == null)
                                 eventMessage.getChannel().sendMessage(eventMessage.getAuthor().getAsMention() + ", vous ne pouvez pas effectuer cette commande sur vous même ! ⚠").queue();
-                            else onYourselfError.accept(eventMessage);
+                            else this.onYourselfError.accept(eventMessage);
                             break;
                     }
                 }
-                else {
-
-                    if (unknownCommand == null) eventMessage.addReaction("❓").queue();
-                    else unknownCommand.accept(eventMessage);
-                }
             });
+
+            if (!found) {
+
+                this.bot.debug("Command not found, sending common");
+                if (this.unknownCommand != null) this.unknownCommand.accept(eventMessage);
+                else eventMessage.addReaction("❓").queue();
+            }
         }
     }
 

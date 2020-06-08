@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 public class Bot extends ListenerAdapter {
 
     private final String name;
+    private final Boolean debug;
     private final List<Command> commands;
     private final String prefix;
     private final List<ReactionTrigger> reactionTriggers;
@@ -44,6 +45,7 @@ public class Bot extends ListenerAdapter {
     public Bot(
             @NotNull String name,
             @Nullable String prefix,
+            @NotNull Boolean debug,
             @Nullable Activity activity,
             @NotNull JDABuilder jdaBuilder,
             @Nullable List<Command> commands,
@@ -54,6 +56,7 @@ public class Bot extends ListenerAdapter {
     ) {
 
         this.name = name;
+        this.debug = debug;
         this.commands = commands == null ? Collections.emptyList() : commands;
         this.prefix = prefix == null ? "!" : prefix;
         this.reactionTriggers = reactionTriggers == null ? Collections.emptyList() : reactionTriggers;
@@ -115,9 +118,9 @@ public class Bot extends ListenerAdapter {
         return prefix;
     }
 
-    public Logger getLogger() {
+    public void debug(String s) {
 
-        return logger;
+        if (this.debug) this.logger.debug(s);
     }
 
     @Override

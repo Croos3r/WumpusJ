@@ -12,18 +12,22 @@ import java.util.function.Consumer;
 
 public class MemberLeave extends ListenerAdapter {
 
-    private final Bot bot;
     private final Consumer<Guild> memberLeave;
+    private final Bot bot;
 
     public MemberLeave(Bot bot, @Nullable Consumer<Guild> memberLeave) {
 
-        this.bot = bot;
         this.memberLeave = memberLeave;
+        this.bot = bot;
     }
 
     @Override
     public void onGuildMemberRemove(@Nonnull GuildMemberRemoveEvent event) {
 
-        if (this.memberLeave != null) this.memberLeave.accept(event.getGuild());
+        if (this.memberLeave != null) {
+
+            this.bot.debug("Member left, executing consumer");
+            this.memberLeave.accept(event.getGuild());
+        }
     }
 }

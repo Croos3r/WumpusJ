@@ -24,12 +24,15 @@ public class CommandListener extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(@Nonnull GuildMessageReceivedEvent event) {
 
-        final Member member = event.getMember();
-        final Message message = event.getMessage();
+        Member member = event.getMember();
+        Message message = event.getMessage();
 
         final String content = message.getContentRaw();
 
-        if (content.startsWith(this.bot.getPrefix()) && member.getUser() != this.bot.getJda().getSelfUser() && !member.getUser().isBot())
+        if (content.startsWith(this.bot.getPrefix()) && member.getUser() != this.bot.getJda().getSelfUser() && !member.getUser().isBot()) {
+
+            this.bot.debug("Recognized possible command, transmitting to handler");
             this.commandHandler.handle(content, event);
+        }
     }
 }
