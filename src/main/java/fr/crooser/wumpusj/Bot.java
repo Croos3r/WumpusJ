@@ -6,38 +6,34 @@ import fr.crooser.wumpusj.command.handler.CommandHandler;
 import fr.crooser.wumpusj.command.handler.CommandHandlerCommons;
 import fr.crooser.wumpusj.listeners.guild.MemberJoin;
 import fr.crooser.wumpusj.listeners.guild.MemberLeave;
-import fr.crooser.wumpusj.reaction.ReactionListener;
-import fr.crooser.wumpusj.reaction.ReactionTrigger;
-
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
-import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class Bot extends ListenerAdapter {
 
+    private static Bot instance;
+
     private final String name;
-    private final Boolean debug;
+    private Boolean jdaLog;
+    private Boolean debug;
     private final List<Command> commands;
-    private final String prefix;
-    private final List<ReactionTrigger> reactionTriggers;
+    private String prefix;
     private JDA jda;
     private final Logger logger;
 
@@ -45,30 +41,28 @@ public class Bot extends ListenerAdapter {
             @NotNull String name,
             @Nullable String prefix,
             @NotNull Boolean debug,
+            @NotNull Boolean jdaLog,
             @Nullable Activity activity,
             @NotNull JDABuilder jdaBuilder,
             @Nullable List<Command> commands,
             @Nullable CommandHandlerCommons handlerCommons,
-            @Nullable List<ReactionTrigger> reactionTriggers,
             @Nullable Consumer<Member> memberJoin,
             @Nullable Consumer<Guild> memberLeave
     ) {
 
+        Bot.instance = this;
         this.name = name;
+
+        Thread.currentThread().setName("WumpusJ - " + this.name);
+
         this.debug = debug;
+        this.jdaLog = jdaLog;
         this.commands = commands == null ? Collections.emptyList() : commands;
         this.prefix = prefix == null ? "!" : prefix;
-        this.reactionTriggers = reactionTriggers == null ? Collections.emptyList() : reactionTriggers;
         this.logger = LoggerFactory.getLogger(this.name);
 
-
-        if (!this.commands.isEmpty()) {
-
-            if (handlerCommons == null) handlerCommons = new CommandHandlerCommons().setInsufficientPermissions(null).setOnAdminError(null).setOnYourselfError(null).setSyntaxError(null).setUnknownCommand(null);
-            jdaBuilder.addEventListeners(new CommandListener(new CommandHandler(this, handlerCommons)));
-        }
-
-        if (!this.reactionTriggers.isEmpty()) jdaBuilder.addEventListeners(new ReactionListener(this));
+        if (handlerCommons == null) handlerCommons = new CommandHandlerCommons().setInsufficientPermissions(null).setOnAdminError(null).setOnYourselfError(null).setSyntaxError(null).setUnknownCommand(null);
+        if (!this.commands.isEmpty()) jdaBuilder.addEventListeners(new CommandListener(new CommandHandler(this, handlerCommons)));
         if (memberJoin != null) {
 
             jdaBuilder.enableIntents(GatewayIntent.GUILD_MEMBERS);
@@ -87,20 +81,20 @@ public class Bot extends ListenerAdapter {
         try {
 
             this.jda = jdaBuilder.build().awaitReady();
-            this.debug("Bot created:");
-            this.debug("name -> " + this.name);
-            this.debug("prefix -> " + this.prefix);
-            this.debug("commands -> " + this.commands.size());
-            this.debug("reaction triggers -> " + this.reactionTriggers.size());
-            this.debug("activity -> " + (activity != null ? activity.getName() : "false"));
+            sendResumeLog(this.name, this.prefix, this.debug, this.jdaLog, this.commands, activity, memberJoin, memberLeave);
         } catch (LoginException e) {
 
-            logger.error("Bot's token is invalid.");
+            this.logger.error("Bot's token is invalid.");
             System.exit(1);
         } catch (InterruptedException e) {
 
             System.exit(-1);
         }
+    }
+
+    public String getName() {
+
+        return this.name;
     }
 
     public JDA getJda() {
@@ -111,11 +105,6 @@ public class Bot extends ListenerAdapter {
     public List<Command> getCommands() {
 
         return commands;
-    }
-
-    public List<ReactionTrigger> getReactionTriggers() {
-
-        return reactionTriggers;
     }
 
     public String getPrefix() {
@@ -136,17 +125,22 @@ public class Bot extends ListenerAdapter {
         this.commands.removeIf(command -> commandLabels.contains(command.getLabel()));
     }
 
-    public void addReactionsTriggers(ReactionTrigger... triggers) {
+    public void setDebug(Boolean debug) {
 
-        for (ReactionTrigger trigger : triggers)
-            if (!this.reactionTriggers.contains(trigger))
-                this.reactionTriggers.add(trigger);
+        this.debug = debug;
     }
 
-    public void removeReactionTriggers(String... ids) {
+    public void setPrefix(String prefix) {
 
-        List<String> triggerIDs = new LinkedList<>(Arrays.asList(ids));
-        this.reactionTriggers.removeIf(trigger -> triggerIDs.contains(trigger.getId()));
+        this.prefix = prefix;
+    }
+
+    public Boolean getJdaLog() {
+        return jdaLog;
+    }
+
+    public void setJdaLog(Boolean jdaLog) {
+        this.jdaLog = jdaLog;
     }
 
     public void debug(String s) {
@@ -154,9 +148,27 @@ public class Bot extends ListenerAdapter {
         if (this.debug) this.logger.debug(s);
     }
 
-    @Override
-    public void onReady(@Nonnull ReadyEvent event) {
+    public static Bot get() {
 
-        logger.info(this.name + " online and ready !");
+        return instance;
+    }
+
+    private void sendResumeLog(@NotNull String name,
+                               @Nullable String prefix,
+                               @NotNull Boolean debug,
+                               @NotNull Boolean jdaLog,
+                               @NotNull List<Command> commands,
+                               @Nullable Activity activity,
+                               @Nullable Consumer<Member> joinAction,
+                               @Nullable Consumer<Guild> leaveAction) {
+
+        this.debug("Bot created:");
+        this.debug("  name -> " + name);
+        this.debug("  logs -> " + (debug ? "debug" : "") + (debug && jdaLog ? " | " : "") + (jdaLog ? "JDA" : ""));
+        this.debug("  prefix -> " + prefix);
+        this.debug("  commands -> " + commands.size());
+        this.debug("  activity -> " + (activity != null ? activity.getName() : "false"));
+        this.debug("  join action -> " + (joinAction != null));
+        this.debug("  leave action -> " + (leaveAction != null));
     }
 }
