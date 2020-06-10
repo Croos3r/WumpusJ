@@ -57,7 +57,7 @@ public class CommandHandler {
         List<String> args = new LinkedList<>(Arrays.asList(message.split(" ")));
         args.remove(label + "");
 
-        this.bot.debug("Processed message, returned label -> " + label + " and args -> " + args.toString());
+        this.bot.debug("Processed message, returned label -> {" + label + "} and args -> " + args.toString());
 
         List<Command> commands = this.bot.getCommands();
 
@@ -74,7 +74,7 @@ public class CommandHandler {
 
                     this.bot.debug("Command found, waiting for result");
 
-                    found.getAndSet(false);
+                    found.getAndSet(true);
 
                     Result result = command.execute(eventMessage, label, args, event.getJDA());
 
