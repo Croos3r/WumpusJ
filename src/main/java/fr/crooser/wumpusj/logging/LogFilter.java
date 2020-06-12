@@ -1,5 +1,6 @@
 package fr.crooser.wumpusj.logging;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
@@ -12,7 +13,11 @@ public class LogFilter extends Filter<ILoggingEvent> {
     @Override
     public FilterReply decide(ILoggingEvent event) {
 
-        if (!bot.getJdaLog() && !event.getLoggerName().equals(bot.getName()) && !event.getThreadName().contains(bot.getName())) return FilterReply.DENY;
-        return FilterReply.ACCEPT;
+        if (!this.bot.getJdaLog()) {
+
+            if (!event.getLoggerName().equals(this.bot.getName()) && !event.getThreadName().contains(this.bot.getName())) return FilterReply.ACCEPT;
+            else if (event.getLevel().equals(Level.ERROR)) return FilterReply.ACCEPT;
+        }
+        return FilterReply.DENY;
     }
 }
