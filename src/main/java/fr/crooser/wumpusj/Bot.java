@@ -6,6 +6,8 @@ import fr.crooser.wumpusj.command.handler.CommandHandler;
 import fr.crooser.wumpusj.command.handler.CommandHandlerCommons;
 import fr.crooser.wumpusj.listeners.guild.MemberJoin;
 import fr.crooser.wumpusj.listeners.guild.MemberLeave;
+import fr.crooser.wumpusj.listeners.reaction.ReactionListener;
+import fr.crooser.wumpusj.reaction.ReactionTrigger;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -34,6 +36,7 @@ public class Bot extends ListenerAdapter {
     private Boolean debug = true;
     private Boolean jdaLog = false;
     private List<Command> commands;
+    private List<ReactionTrigger> reactionTriggers;
     private JDA jda;
     private final Logger logger;
     private Activity activity;
@@ -49,6 +52,7 @@ public class Bot extends ListenerAdapter {
             @NotNull Boolean jdaLog,
             @Nullable Activity activity,
             @Nullable List<Command> commands,
+            @Nullable List<ReactionTrigger> reactionTriggers,
             @Nullable CommandHandlerCommons commandHandlerCommons,
             @Nullable Consumer<Member> memberJoin,
             @Nullable Consumer<Guild> memberLeave,
@@ -61,35 +65,39 @@ public class Bot extends ListenerAdapter {
         Thread.currentThread().setName("WumpusJ BotThread");
         this.logger = LoggerFactory.getLogger(this.name);
 
-        this.setPrefix(prefix);
         this.setDebug(debug);
+        this.setPrefix(prefix);
         this.setJdaLog(jdaLog);
         this.setActivity(activity);
-        this.setCommands(commands);
+        this.setCommands(new LinkedList<>(commands != null ? commands : Collections.emptyList()));
+        this.setReactionTriggers(new LinkedList<>(reactionTriggers != null ? reactionTriggers : Collections.emptyList()));
         this.setCommandHandlerCommons(commandHandlerCommons);
-        this.setMemberJoinAction(memberJoin);
-        this.setMemberLeaveAction(memberLeave);
+        this.initCommandHandler(builder);
 
+        builder.addEventListeners(new ReactionListener(this));
 
         builder.enableIntents(intents != null ? intents : Collections.emptyList());
 
         try {
 
             this.jda = builder.build().awaitReady();
-
-            this.initCommandHandler();
-
-            this.debug("test");
-
-            this.sendResumeLog();
-        } catch (LoginException e) {
+        }
+        catch (LoginException e) {
 
             this.logger.error("Bot's token is invalid.");
             System.exit(1);
-        } catch (InterruptedException e) {
+            return;
+        }
+        catch (InterruptedException e) {
 
             System.exit(-1);
+            return;
         }
+
+        this.setMemberJoinAction(memberJoin);
+        this.setMemberLeaveAction(memberLeave);
+
+        this.sendResumeLog();
     }
 
     public String getName() {
@@ -105,6 +113,11 @@ public class Bot extends ListenerAdapter {
     public List<Command> getCommands() {
 
         return commands;
+    }
+
+    public List<ReactionTrigger> getReactionTriggers() {
+
+        return this.reactionTriggers;
     }
 
     public String getPrefix() {
@@ -123,50 +136,52 @@ public class Bot extends ListenerAdapter {
 
     public void addCommands(@NotNull Command... commands) {
 
-        this.debug("Adding " + commands.length + " command(s):");
-        for (Command command : commands) if (!this.commands.contains(command)) this.commands.add(command);
+        for (Command command : commands) if (!this.commands.contains(command))
+            this.commands.add(command);
     }
 
     public void removeCommands(@NotNull String... labels) {
 
-        this.debug("Removing " + labels.length + " command(s):");
         List<String> commandLabels = new LinkedList<>(Arrays.asList(labels));
         this.commands.removeIf(command -> commandLabels.contains(command.getLabel()));
     }
 
+    private void setReactionTriggers(List<ReactionTrigger> reactionTriggers) {
+
+        this.reactionTriggers = reactionTriggers != null ? reactionTriggers : Collections.emptyList();
+    }
+
+    public void addReactionTriggers(@NotNull ReactionTrigger... reactionTriggers) {
+
+        for (ReactionTrigger trigger : reactionTriggers) if (!this.reactionTriggers.contains(trigger))
+            this.reactionTriggers.add(trigger);
+    }
+
+    public void removeReactionTriggers(@NotNull String... ids) {
+
+        List<String> triggersIDs = new LinkedList<>(Arrays.asList(ids));
+        this.reactionTriggers.removeIf(trigger -> triggersIDs.contains(trigger.getMessage().getId()));
+    }
+
     public void setDebug(@NotNull Boolean debug) {
 
-        if (this.debug != debug) {
-
-            this.debug("Setting debug state to -> " + debug);
-            this.debug = debug;
-        }
+        if (this.debug != debug) this.debug = debug;
     }
 
     public void setPrefix(@Nullable String prefix) {
 
-        if (!this.prefix.equals(prefix)) {
-
-            this.debug("Setting prefix to ->" + prefix);
-            this.prefix = prefix;
-        }
+        if (!this.prefix.equals(prefix)) this.prefix = prefix;
     }
 
     public void setJdaLog(@NotNull Boolean jdaLog) {
 
-        if (this.jdaLog != jdaLog) {
-
-            this.debug("Setting JDA log to -> " + jdaLog);
-            this.jdaLog = jdaLog;
-        }
+        if (this.jdaLog != jdaLog) this.jdaLog = jdaLog;
     }
 
     public void setActivity(@Nullable Activity activity) {
 
-
         if (activity != this.activity && activity != null) {
 
-            this.debug("Setting Activity to -> " + activity.getName() + " " + activity.getType().name());
             this.activity = activity;
             this.jda.getPresence().setActivity(this.activity);
         }
@@ -180,10 +195,8 @@ public class Bot extends ListenerAdapter {
         if (this.memberJoinAction != memberJoinAction) {
 
             this.memberJoinAction = memberJoinAction;
-            if (this.memberJoinAction != null) {
-
+            if (this.memberJoinAction != null)
                 this.jda.addEventListener(new MemberJoin(this, this.memberJoinAction));
-            }
         }
     }
 
@@ -194,10 +207,8 @@ public class Bot extends ListenerAdapter {
         if (this.memberLeaveAction != memberLeaveAction) {
 
             this.memberLeaveAction = memberLeaveAction;
-            if (this.memberLeaveAction != null) {
-
+            if (this.memberLeaveAction != null)
                 this.jda.addEventListener(new MemberLeave(this, this.memberLeaveAction));
-            }
         }
     }
 
@@ -212,9 +223,9 @@ public class Bot extends ListenerAdapter {
         else this.commandHandlerCommons = commandHandlerCommons;
     }
 
-    private void initCommandHandler() {
+    private void initCommandHandler(JDABuilder builder) {
 
-        this.jda.addEventListener(new CommandListener(new CommandHandler(this, this.commandHandlerCommons)));
+        builder.addEventListeners(new CommandListener(new CommandHandler(this, this.commandHandlerCommons)));
     }
 
     public void debug(String s) {
@@ -229,14 +240,15 @@ public class Bot extends ListenerAdapter {
 
     private void sendResumeLog() {
 
-        this.debug("Invite the bot to your server: " + "https://discordapp.com/oauth2/authorize?client_id=" + this.jda.getSelfUser().getId() + "&scope=bot&permissions=2146958839");
-        this.debug("Bot created:");
-        this.debug("  name -> " + this.name);
-        this.debug("  logs -> " + (this.debug ? "debug" : "") + (this.debug && this.jdaLog ? " | " : "") + (this.jdaLog ? "JDA" : ""));
-        this.debug("  prefix -> " + this.prefix);
-        this.debug("  commands -> " + this.commands.size());
-        this.debug("  activity -> " + (this.activity != null ? this.activity.getName() : "false"));
-        this.debug("  join action -> " + (this.memberJoinAction != null));
-        this.debug("  leave action -> " + (this.memberLeaveAction != null));
+        this.logger.debug("Invite the bot to your server: " + "https://discordapp.com/oauth2/authorize?client_id=" + this.jda.getSelfUser().getId() + "&scope=bot&permissions=2146958839");
+        this.logger.debug("Bot created:");
+        this.logger.debug("  name -> " + this.name);
+        this.logger.debug("  log(s) -> " + (this.debug ? "debug" : "") + (this.debug && this.jdaLog ? " | " : "") + (this.jdaLog ? "JDA" : "") + (!(this.debug || this.jdaLog) ? "false" : ""));
+        this.logger.debug("  prefix -> " + this.prefix);
+        this.logger.debug("  command(s) -> " + this.commands.size());
+        this.logger.debug("  reactions trigger(s) -> " + this.reactionTriggers.size());
+        this.logger.debug("  activity -> " + (this.activity != null ? this.activity.getName() : "false"));
+        this.logger.debug("  join action -> " + (this.memberJoinAction != null));
+        this.logger.debug("  leave action -> " + (this.memberLeaveAction != null));
     }
 }

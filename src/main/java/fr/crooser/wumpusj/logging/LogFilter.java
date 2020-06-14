@@ -15,9 +15,10 @@ public class LogFilter extends Filter<ILoggingEvent> {
 
         if (!this.bot.getJdaLog()) {
 
-            if (!event.getLoggerName().equals(this.bot.getName()) && !event.getThreadName().contains(this.bot.getName())) return FilterReply.ACCEPT;
+            if (event.getLoggerName().equals(this.bot.getName()) || event.getThreadName().contains(this.bot.getName())) return FilterReply.ACCEPT;
             else if (event.getLevel().equals(Level.ERROR)) return FilterReply.ACCEPT;
+            else return FilterReply.DENY;
         }
-        return FilterReply.DENY;
+        else return FilterReply.ACCEPT;
     }
 }
