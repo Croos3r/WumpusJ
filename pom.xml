@@ -30,7 +30,7 @@
                 <version>3.2.0</version>
                 <configuration>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <finalName>OasisGamesBot-${project.version}</finalName>
+                    <finalName>${project.name}-${project.version}</finalName>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>4.1.1_156</version>
+            <version>4.1.1_163</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
