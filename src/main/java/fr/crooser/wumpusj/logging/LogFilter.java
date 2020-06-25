@@ -8,16 +8,19 @@ import fr.crooser.wumpusj.Bot;
 
 public class LogFilter extends Filter<ILoggingEvent> {
 
-    private final Bot bot = Bot.get();
-
     @Override
     public FilterReply decide(ILoggingEvent event) {
 
-        if (!this.bot.getJdaLog()) {
+        Bot bot = Bot.get();
 
-            if (event.getLoggerName().equals(this.bot.getName()) || event.getThreadName().contains(this.bot.getName())) return FilterReply.ACCEPT;
-            else if (event.getLevel().equals(Level.ERROR)) return FilterReply.ACCEPT;
-            else return FilterReply.DENY;
+        if (!bot.getJdaLog()) {
+
+            if (event.getLoggerName().equals(bot.getName()) || event.getThreadName().contains(bot.getName()))
+                return FilterReply.ACCEPT;
+            else if (event.getLevel().equals(Level.ERROR))
+                return FilterReply.ACCEPT;
+            else
+                return FilterReply.DENY;
         }
         else return FilterReply.ACCEPT;
     }

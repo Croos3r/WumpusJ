@@ -68,7 +68,6 @@ public class Bot extends ListenerAdapter {
         this.setDebug(debug);
         this.setPrefix(prefix);
         this.setJdaLog(jdaLog);
-        this.setActivity(activity);
         this.setCommands(new LinkedList<>(commands != null ? commands : Collections.emptyList()));
         this.setReactionTriggers(new LinkedList<>(reactionTriggers != null ? reactionTriggers : Collections.emptyList()));
         this.setCommandHandlerCommons(commandHandlerCommons);
@@ -80,7 +79,7 @@ public class Bot extends ListenerAdapter {
 
         try {
 
-            this.jda = builder.build().awaitReady();
+            this.jda = builder.build();
         }
         catch (LoginException e) {
 
@@ -88,14 +87,10 @@ public class Bot extends ListenerAdapter {
             System.exit(1);
             return;
         }
-        catch (InterruptedException e) {
-
-            System.exit(-1);
-            return;
-        }
 
         this.setMemberJoinAction(memberJoin);
         this.setMemberLeaveAction(memberLeave);
+        this.setActivity(activity);
 
         this.sendResumeLog();
     }
@@ -104,42 +99,40 @@ public class Bot extends ListenerAdapter {
 
         return this.name;
     }
-
     public JDA getJda() {
 
         return jda;
     }
-
     public List<Command> getCommands() {
 
         return commands;
     }
-
     public List<ReactionTrigger> getReactionTriggers() {
 
         return this.reactionTriggers;
     }
-
     public String getPrefix() {
 
         return prefix;
     }
-
     public Boolean getJdaLog() {
+
         return jdaLog;
+    }
+    public Activity getActivity() {
+
+        return this.activity;
     }
 
     private void setCommands(List<Command> commands) {
 
         this.commands = commands != null ? commands : Collections.emptyList();
     }
-
     public void addCommands(@NotNull Command... commands) {
 
         for (Command command : commands) if (!this.commands.contains(command))
             this.commands.add(command);
     }
-
     public void removeCommands(@NotNull String... labels) {
 
         List<String> commandLabels = new LinkedList<>(Arrays.asList(labels));
@@ -150,13 +143,11 @@ public class Bot extends ListenerAdapter {
 
         this.reactionTriggers = reactionTriggers != null ? reactionTriggers : Collections.emptyList();
     }
-
     public void addReactionTriggers(@NotNull ReactionTrigger... reactionTriggers) {
 
         for (ReactionTrigger trigger : reactionTriggers) if (!this.reactionTriggers.contains(trigger))
             this.reactionTriggers.add(trigger);
     }
-
     public void removeReactionTriggers(@NotNull String... ids) {
 
         List<String> triggersIDs = new LinkedList<>(Arrays.asList(ids));
@@ -167,26 +158,22 @@ public class Bot extends ListenerAdapter {
 
         if (this.debug != debug) this.debug = debug;
     }
-
     public void setPrefix(@Nullable String prefix) {
 
         if (!this.prefix.equals(prefix)) this.prefix = prefix;
     }
-
     public void setJdaLog(@NotNull Boolean jdaLog) {
 
         if (this.jdaLog != jdaLog) this.jdaLog = jdaLog;
     }
-
     public void setActivity(@Nullable Activity activity) {
 
         if (activity != this.activity && activity != null) {
 
             this.activity = activity;
-            this.jda.getPresence().setActivity(this.activity);
+            this.jda.getPresence().setActivity(activity);
         }
     }
-
     public void setMemberJoinAction(@Nullable Consumer<Member> memberJoinAction) {
 
         if (this.memberJoinAction != null) this.jda.removeEventListener(new MemberJoin(this, this.memberJoinAction));
@@ -199,7 +186,6 @@ public class Bot extends ListenerAdapter {
                 this.jda.addEventListener(new MemberJoin(this, this.memberJoinAction));
         }
     }
-
     public void setMemberLeaveAction(@Nullable Consumer<Guild> memberLeaveAction) {
 
         if (this.memberLeaveAction != null) this.jda.removeEventListener(new MemberLeave(this, this.memberLeaveAction));
@@ -211,7 +197,6 @@ public class Bot extends ListenerAdapter {
                 this.jda.addEventListener(new MemberLeave(this, this.memberLeaveAction));
         }
     }
-
     public void setCommandHandlerCommons(@Nullable CommandHandlerCommons commandHandlerCommons) {
 
         if (commandHandlerCommons == null) this.commandHandlerCommons = new CommandHandlerCommons()

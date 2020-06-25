@@ -68,9 +68,8 @@ public class CommandHandler {
             commands.forEach(command -> {
 
                 List<String> aliases = command.getAliases();
-                aliases.add(command.getLabel());
 
-                if (aliases.contains(label)) {
+                if (aliases.contains(label) || label.equals(command.getLabel())) {
 
                     this.bot.debug("Command found, waiting for result");
 
